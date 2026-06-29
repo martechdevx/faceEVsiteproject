@@ -1,0 +1,101 @@
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700;800&display=swap');
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: "Poppins", sans-serif;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    /* backdrop-filter: blur(2px); */
+    background: url("assets/bgd.jpg") no-repeat;
+    background-size: cover;
+    background-position: cen;
+}
+
+header {
+    position: fixed;
+    top: 0;
+    left: 0px;
+    width: 100%;
+    background: aliceblue;
+    /* backdrop-filter: blur(3px); */
+    padding: 14px 90px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    z-index: 99;
+    user-select: none;
+}
+.navigation-container a {
+    text-decoration: none;
+}
+.logo {
+    color: #1E293B;
+    letter-spacing: -3.5px;
+    font-weight: 800;
+    cursor: pointer;
+    height: 40px;
+    width: auto;
+    object-fit: contain;
+}
+.navlogin a{
+    text-decoration: none;
+}
+.navigation-menu a {
+    text-decoration: none;
+    margin-left: 38px;
+    position: relative;
+    color: #1E293B;
+    font-size: 16px;
+    font-weight: 500;
+}
+.navigation-menu a::after {
+    content: '';
+    position: absolute;
+    width: 100%;
+    height: 3px;
+    border-radius: 5px;
+    background: #1E293B;
+    left: 0;
+    bottom: -2px;
+    transform: scaleX(0);
+    transform-origin: right;
+    transition: transform 0.3s ease;
+}
+.navigation-menu a:hover::after {
+    transform: scaleX(1);
+    transform-origin: left;
+}
+.navigation-btn button {
+   margin-left: 30px;
+   width: 110px;
+   height: 50px;
+   border: none;
+   border-radius: 12px;
+   background: linear-gradient(135deg, #4FA3C8, #3B82F6);
+   color: white;
+   padding: 12px 28px;
+   font-weight: 600;
+   font-size: 16px;
+   transform: translateY(0);
+   box-shadow: 0 10px 20px rgba(79, 164, 200, 0.397);
+   transition: all 0.3s ease;
+   cursor: 
+   pointer;
+}
+
+.navigation-btn button:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 14px 30px rgba(59, 131, 246, 0.253);
+    filter: brightness(1.19);
+}
+
+h1 a{
+    text-decoration: none;
+}

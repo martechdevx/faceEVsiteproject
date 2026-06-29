@@ -1,0 +1,127 @@
+:root{
+  --bg: #f6f8fb;
+  --card: #ffffff;
+  --muted: #69707d;
+  --accent: #5b7cff;
+  --accent-2: #6ee7b7;
+  --glass: rgba(91,124,255,0.08);
+}
+
+.pageWrap{
+  padding: 32px;
+  background: var(--bg);
+  min-height: calc(100vh - 72px);
+  box-sizing: border-box;
+}
+
+.header{
+  margin-bottom: 20px;
+}
+
+.title{
+  margin: 0;
+  font-size: 28px;
+  color: #0f1724;
+  font-weight: 700;
+}
+
+.subtitle{
+  margin: 6px 0 0;
+  color: var(--muted);
+}
+
+.grid{
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 20px;
+  align-items: start;
+}
+
+.card{
+  background: var(--card);
+  border-radius: 12px;
+  padding: 18px;
+  box-shadow: 0 6px 18px rgba(15,23,36,0.06);
+  display: flex;
+  flex-direction: column;
+}
+
+.cardHeader{
+  color: var(--muted);
+  font-size: 14px;
+  margin-bottom: 12px;
+}
+
+.cardBody{
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.large{
+  font-size: 32px;
+  font-weight: 700;
+  color: #0f1724;
+}
+
+.muted{
+  color: var(--muted);
+  font-size: 13px;
+}
+
+.quickAccess{
+  background: linear-gradient(180deg,var(--glass), rgba(255,255,255,0.6));
+  border-radius: 12px;
+  padding: 18px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+.qaHeader{
+  font-weight: 700;
+  margin-bottom: 12px;
+}
+
+.qaButtons{
+  display: flex;
+  gap: 12px;
+}
+
+.buttonPrimary{
+  background: var(--accent);
+  color: white;
+  padding: 10px 16px;
+  border-radius: 8px;
+  text-decoration: none;
+  font-weight: 600;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 6px 14px rgba(91,124,255,0.18);
+}
+
+.buttonPrimary:hover{
+  transform: translateY(-2px);
+}
+
+.buttonOutline{
+  background: transparent;
+  border: 1px solid rgba(15,23,36,0.08);
+  color: #0f1724;
+  padding: 10px 16px;
+  border-radius: 8px;
+  text-decoration: none;
+  font-weight: 600;
+  display: inline-flex;
+  align-items: center;
+}
+
+@media (max-width: 900px){
+  .grid{
+    grid-template-columns: 1fr;
+  }
+  .qaButtons{
+    flex-direction: column;
+  }
+}
