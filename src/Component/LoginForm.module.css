@@ -65,7 +65,7 @@ form .inputBox {
     transform: translateY(-50%);
     font-size: 15px;
 }
-.rememberForgot {
+.showPassWord {
     display: flex;
     justify-content: space-between;
     margin: -15px 0 15px;
@@ -73,16 +73,16 @@ form .inputBox {
     color: #1E293B;
     user-select: none;
 }
-.rememberForgot label input {
+.showPassWord label input {
     accent-color: rgb(219, 4, 4);
     cursor: pointer;
 }
 
-.rememberForgot a {
+.showPassWord a {
     position: relative;
     text-decoration: none;
 }
-.rememberForgot a::after {
+.showPassWord a::after {
     content: '';
     background: #551a8b;;
     width: 100%;
@@ -94,7 +94,7 @@ form .inputBox {
     transform-origin: left;
     transition: transform 0.3s ease;
 }
-.rememberForgot a:hover::after{
+.showPassWord a:hover::after{
     transform: scaleX(1);
     transform-origin: right;
 }
@@ -164,4 +164,21 @@ form .inputBox {
     align-items: center;
     border-bottom-left-radius: 10px;
     text-decoration: none;
+}
+.errorMsg{
+    background:#fef2f2;
+    color:#dc2626;
+    padding:8px 12px;
+    border-radius:8px;
+    font-size:13px;
+    border-left:3px solid #dc2626;
+    margin-bottom:4px;}
+.successMsg{
+    background:#f0fdf4;
+    color:#16a34a;
+    padding:8px 12px;
+    border-radius:8px;
+    font-size:13px;
+    border-left:3px solid #16a34a;
+    margin-bottom:4px;
 }

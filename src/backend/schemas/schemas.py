@@ -56,5 +56,5 @@ class VerifyResponse(BaseModel):
 
 class DashboardStats(BaseModel):
     total_enrolled: int
-    total_searches: int
+    total_verified: int
     user_full_name: str

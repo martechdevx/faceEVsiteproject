@@ -36,15 +36,24 @@ class FaissManager:
     # ── Internal helpers ───────────────────────────────────────────────────
 
     def _load(self):
-        if os.path.exists(INDEX_PATH) and os.path.exists(META_PATH):
-            self.index = faiss.read_index(INDEX_PATH)
-            with open(META_PATH, "rb") as f:
-                self.metadata: list[int] = pickle.load(f)   # list of db row IDs
-            print(f"[FAISS] Loaded index with {self.index.ntotal} faces.")
+        index_exists = os.path.exists(INDEX_PATH) and os.path.getsize(INDEX_PATH) > 0
+        meta_exists  = os.path.exists(META_PATH) and os.path.getsize(META_PATH) > 0
+
+        if index_exists and meta_exists:
+            try:
+                self.index = faiss.read_index(INDEX_PATH)
+                with open(META_PATH, "rb") as f:
+                    self.metadata: list[int] = pickle.load(f)
+                print(f"[FAISS] Loaded index with {self.index.ntotal} faces.")
+            except Exception as e:
+                print(f"[FAISS] Failed to load index, creating fresh. Error: {e}")
+                self.index = faiss.IndexFlatIP(DIMENSION)
+                self.metadata: list[int] = []
         else:
-            self.index = faiss.IndexFlatIP(DIMENSION)        # Inner-product = cosine on normalised vectors
+            self.index = faiss.IndexFlatIP(DIMENSION)
             self.metadata: list[int] = []
             print("[FAISS] Created fresh index.")
+
 
     def _save(self):
         faiss.write_index(self.index, INDEX_PATH)

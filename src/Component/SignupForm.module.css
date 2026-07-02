@@ -1,14 +1,15 @@
+
 .wrapper {
     position: relative;
     width: 420px;
-    height: 470px;
+    height: auto;
     background: transparent;
     backdrop-filter: blur(20px);
     border: 2px solid #CBD5E1;
     border-radius: 10px;
     color: #1E293B;
     box-sizing: border-box;
-    margin-top: 50px;
+    margin: auto;
     box-shadow: 0 6px 20px #cbd5e1;
     transition: height 0.3s ease;
     overflow: hidden;
@@ -57,7 +58,14 @@ form .inputBox {
     transform: translateY(-50%);
     font-size: 15px;
 }
-.rememberForgot {
+.inputBox .eye_icon {
+    position: absolute;
+    top: 50%;
+    left: 1%;
+    font-size: 15px;
+    transform: translateY(-50%);
+}
+.showPassword {
     display: flex;
     justify-content: space-between;
     margin: -15px 0 15px;
@@ -65,7 +73,7 @@ form .inputBox {
     color: #1E293B;
     user-select: none;
 }
-.rememberForgot label input {
+.showPassword label input {
     accent-color: rgb(219, 4, 4);
     cursor: pointer;
 }
@@ -136,3 +144,17 @@ form .inputBox {
     border-bottom-left-radius: 10px;
     text-decoration: none;
 }
+.errorMsg{background:#fef2f2;
+    color:#dc2626;
+    padding:8px 12px;
+    border-radius:8px;
+    font-size:13px;
+    border-left:3px solid #dc2626;
+    margin-bottom:4px;}
+.successMsg{background:#f0fdf4;
+    color:#16a34a;
+    padding:8px 12px;
+    border-radius:8px;
+    font-size:13px;
+    border-left:3px solid #16a34a;
+    margin-bottom:4px;}

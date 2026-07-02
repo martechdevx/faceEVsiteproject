@@ -1,0 +1,314 @@
+.pageWrap {
+  min-height: 100vh;
+  padding: 40px 20px;
+  box-sizing: border-box;
+}
+
+.container {
+  max-width: 860px;
+  margin: 0 auto;
+}
+
+.title {
+  font-size: 26px;
+  font-weight: 700;
+  color: #0f1724;
+  margin: 0 0 6px;
+}
+
+.subtitle {
+  color: #69707d;
+  margin: 0 0 28px;
+  font-size: 14px;
+  font-weight: bold;
+}
+
+.formGrid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 28px;
+  align-items: start;
+}
+
+.form {
+  background: #fff;
+  border-radius: 12px;
+  padding: 28px;
+  box-shadow: 0 4px 14px rgba(15,23,36,0.07);
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.field label {
+  font-size: 13px;
+  font-weight: 600;
+  color: #0f1724;
+}
+
+.field input,
+.field select {
+  padding: 10px 14px;
+  border: 1.5px solid #e0e4ef;
+  border-radius: 8px;
+  font-size: 14px;
+  color: #0f1724;
+  outline: none;
+  transition: border 0.2s;
+  background: #fff;
+}
+
+.field input:focus,
+.field select:focus {
+  border-color: #5b7cff;
+}
+
+.field small {
+  font-size: 12px;
+  color: #a0a8b8;
+}
+
+.helperText {
+  font-size: 12px;
+  color: #64748b;
+  margin-top: 2px;
+}
+
+.slotGrid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.slotBox {
+  border: 1.5px dashed #cbd5e1;
+  border-radius: 12px;
+  min-height: 120px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 10px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  background: #f8fafc;
+  text-align: center;
+  overflow: hidden;
+}
+
+.slotBox:hover {
+  border-color: #5b7cff;
+  background: #f0f4ff;
+}
+
+.slotFilled {
+  border-style: solid;
+  border-color: #5b7cff;
+  background: #f9fbff;
+}
+
+.slotPreview {
+  width: 100%;
+  height: 72px;
+  object-fit: cover;
+  border-radius: 8px;
+  margin-bottom: 8px;
+}
+
+.slotMeta {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px;
+}
+
+.slotIcon {
+  font-size: 24px;
+  color: #5b7cff;
+  font-weight: 700;
+}
+
+.slotLabel {
+  font-size: 12px;
+  font-weight: 600;
+  color: #0f1724;
+}
+
+.slotHint {
+  font-size: 11px;
+  color: #64748b;
+  margin-top: 2px;
+}
+
+.removeBtn {
+  border: none;
+  background: #ef4444;
+  color: white;
+  font-size: 11px;
+  padding: 4px 8px;
+  border-radius: 999px;
+  cursor: pointer;
+}
+
+.submitBtn {
+  padding: 12px;
+  background: linear-gradient(135deg, #4FA3C8, #3B82F6);
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+  margin-top: 4px;
+}
+
+.submitBtn:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(59,130,246,0.3);
+}
+
+.submitBtn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.previewBox {
+  background: #fff;
+  border-radius: 12px;
+  box-shadow: 0 4px 14px rgba(15,23,36,0.07);
+  overflow: hidden;
+  aspect-ratio: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+}
+
+.previewImg {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.navArrowLeft,
+.navArrowRight {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  background: rgba(0, 0, 0, 0.5);
+  color: white;
+  border: none;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  font-size: 20px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s;
+  z-index: 10;
+}
+
+.navArrowLeft:hover,
+.navArrowRight:hover {
+  background: rgba(0, 0, 0, 0.8);
+  transform: translateY(-50%) scale(1.1);
+}
+
+.navArrowLeft {
+  left: 12px;
+}
+
+.navArrowRight {
+  right: 12px;
+}
+
+.imageCounter {
+  position: absolute;
+  bottom: 12px;
+  right: 12px;
+  background: rgba(0, 0, 0, 0.6);
+  color: white;
+  padding: 4px 10px;
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 500;
+  z-index: 10;
+}
+
+.previewPlaceholder {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  color: #a0a8b8;
+}
+
+.previewPlaceholder span {
+  font-size: 48px;
+}
+
+.previewPlaceholder p {
+  font-size: 13px;
+  margin: 0;
+}
+
+.errorMsg {
+  background: #fef2f2;
+  color: #dc2626;
+  padding: 10px 14px;
+  border-radius: 8px;
+  font-size: 13px;
+  border-left: 3px solid #dc2626;
+}
+
+.successMsg {
+  background: #f0fdf4;
+  color: #16a34a;
+  padding: 10px 14px;
+  border-radius: 8px;
+  font-size: 13px;
+  border-left: 3px solid #16a34a;
+}
+
+.gateWrap {
+  min-height: calc(100vh - 90px);
+  display: flex;
+  color: black;
+  align-items: center;
+  justify-content: center;
+  /* background: #f6f8fb; */
+}
+
+.gateBox {
+  background: #fff;
+  border-radius: 12px;
+  padding: 40px;
+  text-align: center;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+}
+
+.gateBox h2 { margin: 0 0 10px; color: #0f1724; }
+.gateBox p { color: #69707d; margin: 0 0 20px; }
+
+.gateBtn {
+  background: #3B82F6;
+  color: white;
+  padding: 10px 24px;
+  border-radius: 8px;
+  text-decoration: none;
+  font-weight: 600;
+}
+
+@media (max-width: 700px) {
+  .formGrid { grid-template-columns: 1fr; }
+}

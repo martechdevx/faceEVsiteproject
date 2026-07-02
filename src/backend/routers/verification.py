@@ -1,23 +1,33 @@
-from fastapi import APIRouter, Depends, HTTPException, UploadFile, File
+from fastapi import APIRouter, Depends, HTTPException, UploadFile, File, Request
 from sqlalchemy.orm import Session
 from core.database import get_db
 from core.dependencies import get_current_user
 from models.models import User, EnrolledFace
 from schemas.schemas import VerifyResponse, MatchResult
+from datetime import datetime
 from faiss_engine.faiss_manager import faiss_manager
 from faiss_engine.face_engine import get_embedding_from_bytes   # ← your face_engine
 
 router = APIRouter(prefix="/verify", tags=["Verification"])
 
 SIMILARITY_THRESHOLD = 0.40   # cosine similarity — tune this (0.0 → 1.0)
+verification_count = 0
+
+
+def increment_verification_count() -> int:
+    global verification_count
+    verification_count += 1
+    return verification_count
 
 
 @router.post("/", response_model=VerifyResponse)
 async def verify_face(
+    request: Request,
     image: UploadFile = File(...),
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):
+    increment_verification_count()
     image_bytes = await image.read()
 
     # ── Extract embedding via face_engine.py ───────────────────────────────
@@ -51,9 +61,16 @@ async def verify_face(
             message="Match found in index but database record is missing.",
         )
 
+    enrolled.is_verified = True
+    db.commit()
+    enrolled.verified_at = datetime.utcnow()  # set to current time
+    db.add(enrolled)
+    db.commit()
+    db.refresh(enrolled)
+
     # Build public URL for the stored image
     image_filename = enrolled.image_path.split("/")[-1]
-    image_url = f"/images/{image_filename}"
+    image_url = f"{str(request.base_url).rstrip('/')}/{image_filename}"
 
     match = MatchResult(
         enrolled_id=enrolled.id,

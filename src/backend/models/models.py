@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String, DateTime, ForeignKey, Text
+from sqlalchemy import Boolean, Column, Integer, String, DateTime, ForeignKey, Text
 from sqlalchemy.orm import relationship
 from datetime import datetime
 from core.database import Base
@@ -24,8 +24,11 @@ class EnrolledFace(Base):
     full_name     = Column(String(150), nullable=False)
     matric_number = Column(String(50), nullable=False)
     gender        = Column(String(20), nullable=False)
+    program        = Column(String(20), nullable=False)
     image_path    = Column(String(500), nullable=False)   # path to stored image
     faiss_index_id = Column(Integer, nullable=False)      # position in FAISS index
+    is_verified   = Column(Boolean, default=False, nullable=True)
+    verified_at = Column(DateTime, default=datetime.utcnow)
     enrolled_by   = Column(Integer, ForeignKey("users.id"), nullable=False)
     enrolled_at   = Column(DateTime, default=datetime.utcnow)
 

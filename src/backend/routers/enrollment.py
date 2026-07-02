@@ -1,5 +1,6 @@
 import os
 import uuid
+from typing import List
 from fastapi import APIRouter, Depends, HTTPException, UploadFile, File, Form, status
 from sqlalchemy.orm import Session
 from core.database import get_db
@@ -15,59 +16,79 @@ router = APIRouter(prefix="/enroll", tags=["Enrollment"])
 ALLOWED_EXTENSIONS = {".jpg", ".jpeg", ".png"}
 
 
-@router.post("/", response_model=EnrollResponse, status_code=status.HTTP_201_CREATED)
+def validate_uploaded_images(images: List[UploadFile]) -> List[UploadFile]:
+    if len(images) > 6:
+        raise ValueError("You can enroll up to 6 images at once.")
+    return images
+
+
+@router.post("/", response_model=List[EnrollResponse], status_code=status.HTTP_201_CREATED)
 async def enroll_face(
     full_name: str = Form(...),
     gender: str = Form(...),
+    program: str = Form(...),
     matric_number: str = Form(...),
-    image: UploadFile = File(...),
+    images: List[UploadFile] = File(...),
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):
-    # Validate file extension
-    ext = os.path.splitext(image.filename)[1].lower()
-    if ext not in ALLOWED_EXTENSIONS:
-        raise HTTPException(
-            status_code=400,
-            detail=f"Unsupported file type '{ext}'. Please upload a JPG or PNG or JPEG",
+    try:
+        validated_images = validate_uploaded_images(images)
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
+
+    results = []
+
+    for image in validated_images:
+        # Validate file extension
+        ext = os.path.splitext(image.filename or "")[1].lower()
+        if ext not in ALLOWED_EXTENSIONS:
+            raise HTTPException(
+                status_code=400,
+                detail=f"Unsupported file type '{ext}'. Please upload a JPG, PNG, or JPEG image.",
+            )
+
+        image_bytes = await image.read()
+
+        # ── Extract embedding via face_engine.py ───────────────────────────────
+        embedding = get_embedding_from_bytes(image_bytes)
+
+        # ── Save image to disk ─────────────────────────────────────────────────
+        os.makedirs(settings.UPLOAD_DIR, exist_ok=True)
+        filename = f"{uuid.uuid4().hex}{ext}"
+        save_path = os.path.join(settings.UPLOAD_DIR, filename)
+        with open(save_path, "wb") as f:
+            f.write(image_bytes)
+
+        # ── Add to FAISS (placeholder id first) ───────────────────────────────
+        faiss_position = faiss_manager.add_embedding(embedding, db_row_id=0)
+
+        # ── Save metadata to MySQL ─────────────────────────────────────────────
+        enrolled = EnrolledFace(
+            full_name=full_name,
+            gender=gender,
+            program=program,
+            matric_number=matric_number,
+            image_path=save_path,
+            faiss_index_id=faiss_position,
+            enrolled_by=current_user.id,
+        )
+        db.add(enrolled)
+        db.commit()
+        db.refresh(enrolled)
+
+        # ── Update FAISS metadata with real DB row id ──────────────────────────
+        faiss_manager.metadata[faiss_position] = enrolled.id
+        faiss_manager._save()
+
+        results.append(
+            EnrollResponse(
+                message="Face enrolled successfully.",
+                enrolled_id=enrolled.id,
+                matric_number=enrolled.matric_number,
+                full_name=enrolled.full_name,
+                faiss_index_id=faiss_position,
+            )
         )
 
-    image_bytes = await image.read()
-
-    # ── Extract embedding via face_engine.py ───────────────────────────────
-    embedding = get_embedding_from_bytes(image_bytes)
-
-    # ── Save image to disk ─────────────────────────────────────────────────
-    os.makedirs(settings.UPLOAD_DIR, exist_ok=True)
-    filename = f"{uuid.uuid4().hex}{ext}"
-    save_path = os.path.join(settings.UPLOAD_DIR, filename)
-    with open(save_path, "wb") as f:
-        f.write(image_bytes)
-
-    # ── Add to FAISS (placeholder id first) ───────────────────────────────
-    faiss_position = faiss_manager.add_embedding(embedding, db_row_id=0)
-
-    # ── Save metadata to MySQL ─────────────────────────────────────────────
-    enrolled = EnrolledFace(
-        full_name=full_name,
-        gender=gender,
-        matric_number=matric_number,
-        image_path=save_path,
-        faiss_index_id=faiss_position,
-        enrolled_by=current_user.id,
-    )
-    db.add(enrolled)
-    db.commit()
-    db.refresh(enrolled)
-
-    # ── Update FAISS metadata with real DB row id ──────────────────────────
-    faiss_manager.metadata[faiss_position] = enrolled.id
-    faiss_manager._save()
-
-    return EnrollResponse(
-        message="Face enrolled successfully.",
-        enrolled_id=enrolled.id,
-        matric_number=enrolled.matric_number,
-        full_name=enrolled.full_name,
-        faiss_index_id=faiss_position,
-    )
+    return results
