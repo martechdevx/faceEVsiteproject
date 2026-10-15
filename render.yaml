@@ -1,6 +1,6 @@
 services:
   - type: web
-    name: faceev-backend
+    name: faceEVsiteproject
     runtime: python
     rootDir: src/backend
     buildCommand: pip install -r requirements.txt
