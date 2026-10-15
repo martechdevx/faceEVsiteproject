@@ -1,19 +1,28 @@
-from fastapi import Depends, HTTPException, status
-from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
+from fastapi import Depends, HTTPException, Request, status
+from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials, OAuth2PasswordBearer
 from sqlalchemy.orm import Session
 from core.database import get_db
 from core.security import decode_access_token
 from models.models import User
 
-# HTTPBearer shows a clean "Bearer token" input box in Swagger
-bearer_scheme = HTTPBearer()
+oauth2_scheme = OAuth2PasswordBearer(tokenUrl= "/auth/swagger-login", auto_error= False)
+
+bearer_scheme = HTTPBearer(auto_error=False)
 
 
 def get_current_user(
-    credentials: HTTPAuthorizationCredentials = Depends(bearer_scheme),
+    request: Request,
+    bearer: HTTPAuthorizationCredentials = Depends(bearer_scheme),
     db: Session = Depends(get_db),
+    token_from_form: str = Depends(oauth2_scheme)
 ) -> User:
-    token = credentials.credentials
+    token = request.cookies.get("access_token") or (bearer.credentials if bearer else None) or token_from_form
+    
+    if not token:
+        raise HTTPException(
+            status_code = status.HTTP_401_UNAUTHORIZED,
+            detail="Not authenticated."
+        )
 
     payload = decode_access_token(token)
     if payload is None:

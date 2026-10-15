@@ -3,11 +3,11 @@ import numpy as np
 from fastapi import HTTPException
 from insightface.app import FaceAnalysis
 
-# ── Load InsightFace model once (module-level singleton) ───────────────────
+#  Load InsightFace model once (module-level singleton) 
 # ctx_id=0  → GPU if available
 # ctx_id=-1 → CPU only (change to -1 if you have no NVIDIA GPU)
 _app = FaceAnalysis(name="buffalo_l")
-_app.prepare(ctx_id=0, det_size=(640, 640), det_thresh=0.2)
+_app.prepare(ctx_id=0, det_size=(1024, 1024), det_thresh=0.2)
 
 
 def _get_largest_face(image: np.ndarray):
@@ -39,10 +39,10 @@ def _is_clear_face(image: np.ndarray, face) -> bool:
 
     gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
     laplacian = cv2.Laplacian(gray, cv2.CV_64F).var()
-    return laplacian > 80.0
+    return laplacian > 50.0
 
 
-# ── Original function (kept intact — used by index_faces.py) ───────────────
+#  Original function (kept intact — used by index_faces.py) 
 
 def get_face_embedding(image_path: str) -> np.ndarray | None:
     """
@@ -61,7 +61,7 @@ def get_face_embedding(image_path: str) -> np.ndarray | None:
     return largest_face.embedding
 
 
-# ── New function (used by FastAPI routers) ─────────────────────────────────
+#  New function (used by FastAPI routers) 
 
 def get_embedding_from_bytes(image_bytes: bytes) -> np.ndarray:
     """

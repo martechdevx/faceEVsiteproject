@@ -1,72 +1,62 @@
 .pageWrap {
-  min-height: 100vh;
-  padding: 40px 20px;
+  min-height: calc(100vh - var(--nav-h));
+  padding: 48px clamp(20px, 6vw, 80px);
   box-sizing: border-box;
 }
 
+.pageHeader { margin-bottom: 40px; animation: fadeUp 0.5s ease both; }
+.breadcrumb { display:flex; align-items:center; gap:8px; margin-bottom:16px; flex-wrap:wrap; }
+.breadHome { font-size:13px; color:var(--white-60); text-decoration:none; }
+.breadSep { color:var(--white-30); }
+.breadCurrent { font-size:13px; color:var(--cyan); font-weight:600; }
+.title { font-size:clamp(26px,4vw,40px); font-weight:800; font-family:var(--font-display); margin:0 0 8px; color:var(--white); }
+.subtitle { font-size:15px; color:var(--white-60); max-width:480px; margin:0; line-height:1.65; }
+
+.progressCard { margin-bottom:36px; padding:16px 20px; background:var(--card-bg); border:1px solid var(--border); border-radius:14px; backdrop-filter:blur(16px); animation:fadeUp 0.5s ease 0.05s both; }
+.progressTop { display:flex; justify-content:space-between; align-items:center; margin-bottom:10px; }
+.progressLabel { font-size:13px; font-weight:600; color:var(--white-60); }
+.progressValue { font-size:13px; font-weight:700; color:var(--cyan); }
+.progressTrack { height:6px; background:rgba(240,246,255,0.08); border-radius:3px; overflow:hidden; }
+.progressFill { height:100%; background:linear-gradient(90deg,var(--blue),var(--cyan)); border-radius:3px; transition:width 0.4s ease; }
+.progressSteps { display:flex; gap:20px; margin-top:12px; flex-wrap:wrap; }
+.progressStep { font-size:12px; font-weight:500; color:var(--white-30); display:flex; align-items:center; gap:5px; }
+.progressStepDone { color:#6ee7b7; }
+
+.mainGrid { display:grid; grid-template-columns:minmax(0,1fr) 340px; gap:24px; animation:fadeUp 0.5s ease 0.1s both; }
+.formCard { min-width:0; padding:32px; background:var(--card-bg); border:1px solid var(--border); border-radius:20px; backdrop-filter:blur(16px); }
+.form { display:flex; flex-direction:column; gap:24px; }
+.sectionLabel { font-size:12px; font-weight:700; letter-spacing:1.5px; color:var(--cyan); text-transform:uppercase; margin-bottom:18px; }
+.personalGrid { display:grid; grid-template-columns:1fr 1fr; gap:16px; }
+.fullWidth { grid-column:1 / -1; }
+.label { display:block; font-size:13px; font-weight:600; color:var(--white-60); margin-bottom:8px; }
+.inputField { width:100%; min-width:0; padding:12px 14px; background:var(--white-5) !important; border:1.5px solid var(--border); border-radius:10px; outline:none; color:var(--white); font:14px var(--font-body); box-sizing:border-box; }
+.inputField:focus { 
+  border-color:var(--blue-2); 
+  box-shadow:0 0 0 3px rgba(59,130,246,0.15); 
+}
+.inputField option { 
+  background: var(--navy-3); 
+  color:var(--white);
+  outline: none;
+ }
+.inputField:has(option) { 
+  color-scheme:dark;
+  outline: none;
+  border-radius:10px;
+}
+.inputField:has(option):focus {
+  outline:none;
+  box-shadow:none;
+}
 .container {
   max-width: 860px;
   margin: 0 auto;
-}
-
-.title {
-  font-size: 26px;
-  font-weight: 700;
-  color: #0f1724;
-  margin: 0 0 6px;
-}
-
-.subtitle {
-  color: #69707d;
-  margin: 0 0 28px;
-  font-size: 14px;
-  font-weight: bold;
-}
-
-.formGrid {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 28px;
-  align-items: start;
-}
-
-.form {
-  background: #fff;
-  border-radius: 12px;
-  padding: 28px;
-  box-shadow: 0 4px 14px rgba(15,23,36,0.07);
-  display: flex;
-  flex-direction: column;
-  gap: 18px;
 }
 
 .field {
   display: flex;
   flex-direction: column;
   gap: 6px;
-}
-
-.field label {
-  font-size: 13px;
-  font-weight: 600;
-  color: #0f1724;
-}
-
-.field input,
-.field select {
-  padding: 10px 14px;
-  border: 1.5px solid #e0e4ef;
-  border-radius: 8px;
-  font-size: 14px;
-  color: #0f1724;
-  outline: none;
-  transition: border 0.2s;
-  background: #fff;
-}
-
-.field input:focus,
-.field select:focus {
-  border-color: #5b7cff;
 }
 
 .field small {
@@ -76,7 +66,7 @@
 
 .helperText {
   font-size: 12px;
-  color: #64748b;
+  color: var(--white-60);
   margin-top: 2px;
 }
 
@@ -86,8 +76,28 @@
   gap: 12px;
 }
 
+.slotStage { position:relative; border-radius:14px; overflow:hidden; }
+.slotStageLoading .slotGrid { filter:blur(3px); opacity:0.5; transform:scale(0.985); pointer-events:none; transition:filter 0.25s, opacity 0.25s, transform 0.25s; }
+.slotProcessingOverlay { position:absolute; inset:0; z-index:4; display:flex; align-items:center; justify-content:center; overflow:hidden; border:1px solid rgba(59,130,246,0.3); border-radius:14px; background:rgba(6,13,26,0.28); backdrop-filter:blur(2px); }
+.slotScanBeam { position:absolute; top:-25%; left:0; width:100%; height:25%; background:linear-gradient(180deg,transparent,rgba(45,212,191,0.14),rgba(59,130,246,0.24),transparent); border-bottom:1px solid rgba(94,234,212,0.65); box-shadow:0 5px 22px rgba(45,212,191,0.2); animation:enrollmentScan 1.8s ease-in-out infinite; }
+.slotProcessingMessage { position:relative; z-index:1; display:flex; flex-direction:column; align-items:center; gap:8px; max-width:calc(100% - 28px); padding:14px 18px; border:1px solid rgba(148,197,253,0.22); border-radius:9px; background:rgba(6,13,26,0.82); color:#dbeafe; text-align:center; box-shadow:0 8px 28px rgba(0,0,0,0.25); }
+.slotProcessingMessage > svg { color:#67e8f9; animation:spin-slow 1s linear infinite; }
+.slotProcessingMessage strong { font-size:13px; }
+.slotProcessingMessage span { color:rgba(219,234,254,0.72); font-size:11px; }
+@keyframes enrollmentScan { 0% { transform:translateY(0); } 100% { transform:translateY(520%); } }
+
+.enrollmentStatusPage { display:flex; align-items:center; justify-content:center; min-height:calc(100vh - var(--nav-h)); padding:32px 18px; }
+.enrollmentStatusCard { display:flex; flex-direction:column; align-items:center; gap:13px; width:min(520px,100%); padding:34px 30px; border:1px solid var(--border); border-radius:14px; background:var(--card-bg); color:var(--white); text-align:center; box-shadow:var(--shadow); }
+.enrollmentStatusCard > svg { color:var(--cyan); }
+.enrollmentStatusCard h1 { margin:0; font:700 24px var(--font-display); color:var(--white); }
+.enrollmentStatusCard p { margin:0; color:var(--white-60); font-size:13px; }
+.enrollmentStatusSuccess { width:44px; height:44px; display:grid; place-items:center; border-radius:50%; background:rgba(16,185,129,0.12); color:#10b981; }
+.enrollmentStatusEyebrow { color:var(--cyan); font-size:10px; font-weight:800; letter-spacing:1.2px; }
+.enrollmentStatusSpinner { animation:spin-slow 1s linear infinite; color:var(--cyan); }
+.enrollmentStatusCard .alert { width:100%; text-align:left; }
+
 .slotBox {
-  border: 1.5px dashed #cbd5e1;
+  border: 1.5px dashed var(--border-2);
   border-radius: 12px;
   min-height: 120px;
   display: flex;
@@ -97,20 +107,20 @@
   padding: 10px;
   cursor: pointer;
   transition: all 0.2s ease;
-  background: #f8fafc;
+  background: var(--white-5);
   text-align: center;
   overflow: hidden;
 }
 
 .slotBox:hover {
   border-color: #5b7cff;
-  background: #f0f4ff;
+  background: var(--surface-strong);
 }
 
 .slotFilled {
   border-style: solid;
   border-color: #5b7cff;
-  background: #f9fbff;
+  background: var(--surface-soft);
 }
 
 .slotPreview {
@@ -138,12 +148,12 @@
 .slotLabel {
   font-size: 12px;
   font-weight: 600;
-  color: #0f1724;
+  color: var(--white);
 }
 
 .slotHint {
   font-size: 11px;
-  color: #64748b;
+  color: var(--white-60);
   margin-top: 2px;
 }
 
@@ -181,7 +191,7 @@
 }
 
 .previewBox {
-  background: #fff;
+  background: var(--navy-2);
   border-radius: 12px;
   box-shadow: 0 4px 14px rgba(15,23,36,0.07);
   overflow: hidden;
@@ -283,22 +293,23 @@
 .gateWrap {
   min-height: calc(100vh - 90px);
   display: flex;
-  color: black;
+  color: var(--white);
   align-items: center;
   justify-content: center;
   /* background: #f6f8fb; */
 }
 
 .gateBox {
-  background: #fff;
+  background: var(--card-bg);
+  border: 1px solid var(--border);
   border-radius: 12px;
   padding: 40px;
   text-align: center;
   box-shadow: 0 4px 20px rgba(0,0,0,0.08);
 }
 
-.gateBox h2 { margin: 0 0 10px; color: #0f1724; }
-.gateBox p { color: #69707d; margin: 0 0 20px; }
+.gateBox h2 { margin: 0 0 10px; color: var(--white); }
+.gateBox p { color: var(--white-60); margin: 0 0 20px; }
 
 .gateBtn {
   background: #3B82F6;
@@ -311,4 +322,39 @@
 
 @media (max-width: 700px) {
   .formGrid { grid-template-columns: 1fr; }
+
+  .pageWrap {
+    padding: 32px 16px 48px !important;
+  }
+
+  .progressCard {
+    padding: 14px 16px !important;
+  }
+
+  .mainGrid {
+    grid-template-columns: 1fr !important;
+    gap: 18px !important;
+  }
+
+  .formCard {
+    padding: 20px 16px !important;
+  }
+
+  .personalGrid {
+    grid-template-columns: 1fr !important;
+    gap: 14px !important;
+  }
+
+  .personalGrid > div {
+    grid-column: 1 / -1 !important;
+  }
+
+  .slotGrid {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    gap: 8px !important;
+  }
+  .slotProcessingMessage { padding:12px; }
+  .slotProcessingMessage strong { font-size:12px; }
+  .slotProcessingMessage span { font-size:10px; }
+  .enrollmentStatusCard { padding:28px 20px; }
 }

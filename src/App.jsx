@@ -1,6 +1,7 @@
-import React from "react";
 import { BrowserRouter, Routes, Route, useLocation } from "react-router-dom";
 import { AuthProvider } from "./context/AuthContext";
+import { useAuth } from "./context/AuthContext";
+import { ThemeProvider } from "./context/ThemeContext";
 import NavBar from "./Component/NavBar.jsx";
 import Home from "./pages/Home.jsx";
 import Login from "./pages/Login.jsx";
@@ -11,13 +12,14 @@ import Blog from "./pages/Blog.jsx";
 import Dashboard from "./pages/dashboard/dashboard.jsx";
 
 function AppContent() {
-  // const location = useLocation();
-  // const hideNav = location.pathname === "/dashboard";
+  const location = useLocation();
+  const { isAdmin } = useAuth();
+  const adminDashboard = isAdmin && location.pathname === "/dashboard";
 
   return (
     <>
-      <NavBar />
-      <div className="page-shell">
+      {!adminDashboard && <NavBar />}
+      <div className={adminDashboard ? "page-shell page-shell-admin" : "page-shell"}>
         <Routes>
           <Route path="/" element={<Home />} />
           <Route path="/login" element={<Login />} />
@@ -35,9 +37,11 @@ function AppContent() {
 function App() {
   return (
     <BrowserRouter>
-      <AuthProvider>
-        <AppContent />
-      </AuthProvider>
+      <ThemeProvider>
+        <AuthProvider>
+          <AppContent />
+        </AuthProvider>
+      </ThemeProvider>
     </BrowserRouter>
   );
 }

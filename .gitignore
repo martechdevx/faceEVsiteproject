@@ -1,2 +1,25 @@
-node_modules 
-dist 
+# Local environment files
+.env
+.env.*
+!.env.example
+!.env.*.example
+*.env
+
+# JavaScript build output and dependencies
+node_modules/
+dist/
+
+# Python caches and virtual environments
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.mypy_cache/
+.venv/
+venv/
+
+# User-uploaded face data and generated FAISS indexes
+src/backend/storage/images/
+src/backend/storage/faiss/
+
+# Local logs
+*.log
