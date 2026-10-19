@@ -39,7 +39,9 @@ COOKIE_KWARGS = dict(
     secure=running_on_railway,
     samesite="none" if running_on_railway else "lax",
 )
-
+# ── FIX: samesite="lax" so cookies are sent on cross-origin requests
+#         (Vite dev server → FastAPI). secure=False stays False for HTTP dev.
+# COOKIE_KWARGS = dict(httponly=True, secure=False, samesite="lax")
 
 def _issue_tokens(response: Response, db: Session, user: User):
     """Creates a fresh access + refresh token pair, stores the refresh

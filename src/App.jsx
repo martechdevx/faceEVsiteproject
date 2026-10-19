@@ -1,4 +1,5 @@
 import { BrowserRouter, Routes, Route, useLocation } from "react-router-dom";
+import { useLayoutEffect } from "react";
 import { AuthProvider } from "./context/AuthContext";
 import { useAuth } from "./context/AuthContext";
 import { ThemeProvider } from "./context/ThemeContext";
@@ -15,6 +16,20 @@ function AppContent() {
   const location = useLocation();
   const { isAdmin } = useAuth();
   const adminDashboard = isAdmin && location.pathname === "/dashboard";
+
+  useLayoutEffect(() => {
+    const root = document.documentElement;
+    const previousScrollBehavior = root.style.scrollBehavior;
+    root.style.scrollBehavior = "auto";
+    window.scrollTo(0, 0);
+    root.style.scrollBehavior = previousScrollBehavior;
+
+    document
+      .querySelectorAll(".page-shell-admin main")
+      .forEach((element) => {
+        element.scrollTop = 0;
+      });
+  }, [location.pathname]);
 
   return (
     <>

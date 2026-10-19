@@ -208,7 +208,7 @@ def delete_enrollment(
             .filter(EnrolledFace.enrolled_by == user_id)
             .order_by(EnrolledFace.faiss_index_id.desc())
             .all()
-        )
+        ) 
         if not faces:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Enrollment not found for this user.")
 
