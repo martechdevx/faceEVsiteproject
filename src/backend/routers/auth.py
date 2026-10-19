@@ -1,5 +1,6 @@
 from datetime import datetime
 import logging
+import os
 
 from sqlalchemy import func, or_
 from fastapi import APIRouter, Depends, HTTPException, status, Request, Response
@@ -32,9 +33,12 @@ logger = logging.getLogger("auth")
 
 router = APIRouter(prefix="/auth", tags=["Authentication"])
 
-# ── FIX: samesite="lax" so cookies are sent on cross-origin requests
-#         (Vite dev server → FastAPI). secure=False stays False for HTTP dev.
-COOKIE_KWARGS = dict(httponly=True, secure=False, samesite="lax")
+running_on_railway = os.environ.get("RUNNING_ON_RAILWAY", "").lower() == "true"
+COOKIE_KWARGS = dict(
+    httponly=True,
+    secure=running_on_railway,
+    samesite="none" if running_on_railway else "lax",
+)
 
 
 def _issue_tokens(response: Response, db: Session, user: User):

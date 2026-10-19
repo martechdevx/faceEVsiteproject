@@ -124,7 +124,7 @@ app.add_middleware(
         "http://127.0.0.1:5173",    #local alt
         "http://localhost:3000",    #local alt
         "http://127.0.0.1:3000",    #local alt
-        "https://faceio.pages.dev/" #production
+        "https://faceio.pages.dev", #production
     ],
     allow_credentials=True,
     allow_methods=["*"],
