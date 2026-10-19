@@ -1,13 +1,21 @@
+import os
+
 import cv2
 import numpy as np
 from fastapi import HTTPException
 from insightface.app import FaceAnalysis
 
 #  Load InsightFace model once (module-level singleton) 
-# ctx_id=0  → GPU if available
-# ctx_id=-1 → CPU only (change to -1 if you have no NVIDIA GPU)
-_app = FaceAnalysis(name="buffalo_l")
-_app.prepare(ctx_id=0, det_size=(1024, 1024), det_thresh=0.2)
+running_on_railway = os.environ.get("RUNNING_ON_RAILWAY", "").lower() == "true"
+target_device = -1 if running_on_railway else 0
+providers = (
+    ["CPUExecutionProvider"]
+    if running_on_railway
+    else ["CUDAExecutionProvider", "CPUExecutionProvider"]
+)
+
+_app = FaceAnalysis(name="buffalo_l", providers=providers)
+_app.prepare(ctx_id=target_device, det_size=(1024, 1024), det_thresh=0.2)
 
 
 def _get_largest_face(image: np.ndarray):
