@@ -14,7 +14,11 @@ providers = (
     else ["CUDAExecutionProvider", "CPUExecutionProvider"]
 )
 
-_app = FaceAnalysis(name="buffalo_l", providers=providers)
+_app = FaceAnalysis(
+    name="buffalo_l",
+    allowed_modules=["detection", "recognition"],
+    providers=providers,
+)
 _app.prepare(ctx_id=target_device, det_size=(1024, 1024), det_thresh=0.2)
 
 
