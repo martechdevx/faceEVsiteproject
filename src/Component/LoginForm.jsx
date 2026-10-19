@@ -124,7 +124,7 @@ function LoginForm() {
             <FiShield size={15}/> Admin login
           </button>
         </div>
-        {adminMode && <p className={styles.adminNote}>Use the password for your registered, authorized admin account.</p>}
+        {adminMode && <p className={styles.adminNote}>Use your authorized admin account.</p>}
 
         <form className={styles.form} onSubmit={handleSubmit}>
           {error && (
