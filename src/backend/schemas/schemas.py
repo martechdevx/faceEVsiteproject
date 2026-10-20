@@ -57,7 +57,7 @@ class EnrollRequest(BaseModel):
     gender: str
     program: str
     matric_number: str
-    images: List[str] = Field(min_length=1, max_length=6)
+    images: List[str] = Field(min_length=1, max_length=3)
     
 # ── Verification 
 

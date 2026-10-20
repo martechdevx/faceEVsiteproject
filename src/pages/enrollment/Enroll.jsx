@@ -6,6 +6,7 @@ import { FiAlertTriangle, FiArrowRight, FiCamera, FiCheckCircle, FiClipboard, Fi
 import styles from "./Enroll.module.css";
 
 const MAX_IMAGE_SIZE_BYTES = 100 * 1024;
+const MAX_IMAGES = 3;
 
 function Enroll() {
   const { isLoggedIn } = useAuth();
@@ -14,7 +15,7 @@ function Enroll() {
   const [gender, setGender] = useState("");
   const [program, setProgram] = useState("");
   const [matricNumber, setMatricNumber] = useState("");
-  const [imageSlots, setImageSlots] = useState(Array(6).fill(null));
+  const [imageSlots, setImageSlots] = useState(Array(MAX_IMAGES).fill(null));
   const [preview, setPreview] = useState(null);
   const [previewIndex, setPreviewIndex] = useState(0);
   const [loading, setLoading] = useState(false);
@@ -180,7 +181,7 @@ function Enroll() {
       setEnrolledFaceCount(count);
       setAlreadyEnrolled(true);
       setFullName(""); setGender(""); setProgram(""); setMatricNumber("");
-      setImageSlots(Array(6).fill(null)); setPreview(null); setPreviewIndex(0);
+      setImageSlots(Array(MAX_IMAGES).fill(null)); setPreview(null); setPreviewIndex(0);
     } catch (err) {
       setError(err.message);
     } finally {
@@ -191,7 +192,7 @@ function Enroll() {
   const completedFields = [
     fullName.trim(), gender, program, matricNumber.trim(),
   ].filter(Boolean).length;
-  const progress = Math.round(((completedFields / 4) * 0.5 + (selectedSlots.length / 6) * 0.5) * 100);
+  const progress = Math.round(((completedFields / 4) * 0.5 + (selectedSlots.length / MAX_IMAGES) * 0.5) * 100);
 
   return (
     <div className={styles.pageWrap}>
@@ -206,7 +207,7 @@ function Enroll() {
         </div>
         <h1 className={styles.title}>Face Enrollment</h1>
         <p className={styles.subtitle}>
-          Register a new person by entering their details and uploading up to 6 clear face photos.
+          Register a new person by entering their details and uploading up to 3 clear face photos.
           More images improve matching accuracy.
         </p>
       </div>
@@ -226,7 +227,7 @@ function Enroll() {
           {[
             { label: "Personal details", done: completedFields >= 4 },
             { label: "Images uploaded", done: selectedSlots.length > 0 },
-            { label: "Ready to enroll", done: completedFields >= 4 && selectedSlots.length >= 6 },
+            { label: "Ready to enroll", done: completedFields >= 4 && selectedSlots.length >= MAX_IMAGES },
           ].map(s => (
             <span key={s.label} className={`${styles.progressStep} ${s.done ? styles.progressStepDone : ""}`}>
               <span>{s.done ? <FiCheckCircle size={13} /> : <FiInfo size={13} />}</span> {s.label}
@@ -311,18 +312,18 @@ function Enroll() {
                     FACE IMAGES *
                   </div>
                   <div style={{ fontSize: 13, color: "var(--white-60)" }}>
-                    Upload up to 6 clear, well-lit face photos
+                    Upload up to 3 clear, well-lit face photos
                   </div>
                 </div>
                 <span style={{
                   fontSize: 12, fontWeight: 700,
                   padding: "4px 10px",
-                  background: selectedSlots.length === 6 ? "rgba(16,185,129,0.15)" : "rgba(37,99,235,0.15)",
-                  border: `1px solid ${selectedSlots.length === 6 ? "rgba(16,185,129,0.3)" : "rgba(37,99,235,0.3)"}`,
+                  background: selectedSlots.length === MAX_IMAGES ? "rgba(16,185,129,0.15)" : "rgba(37,99,235,0.15)",
+                  border: `1px solid ${selectedSlots.length === MAX_IMAGES ? "rgba(16,185,129,0.3)" : "rgba(37,99,235,0.3)"}`,
                   borderRadius: 999,
-                  color: selectedSlots.length === 6 ? "#6ee7b7" : "var(--blue-2)",
+                  color: selectedSlots.length === MAX_IMAGES ? "#6ee7b7" : "var(--blue-2)",
                 }}>
-                  {selectedSlots.length} / 6
+                  {selectedSlots.length} / {MAX_IMAGES}
                 </span>
               </div>
 

@@ -606,7 +606,7 @@ function Home() {
         <FeatureCard delay={0}
           icon={<FaCode />}
           title="Multi-Image Enrollment"
-          desc="Register up to 6 face images per person for maximum accuracy. Covers different angles, expressions, and lighting conditions." />
+          desc="Register up to 3 face images per person for accurate matching across different angles and lighting conditions." />
 
         <FeatureCard delay={80}
           icon={<FaLock />}
@@ -679,7 +679,7 @@ function Home() {
               desc="Sign up as an administrator. Your session is secured by HttpOnly cookies and HMAC-signed API calls." />
             <Step num="2" delay={100}
               title="Enroll faces with full details"
-              desc="Enter the person's name, matric number, program, and upload up to 6 face photos. The system stores a vector embedding — not raw images in a database." />
+              desc="Enter the person's name, matric number, program, and upload up to 3 face photos. The system stores a vector embedding — not raw images in a database." />
             <Step num="3" delay={200}
               title="Verify any time"
               desc="Upload a new photo of the same person. The AI compares it against all enrolled vectors and returns the best match with a similarity score." />

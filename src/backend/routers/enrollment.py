@@ -38,8 +38,8 @@ def decode_enrollment_image(image: str) -> bytes:
 
 
 def validate_uploaded_images(images: List[UploadFile]) -> List[UploadFile]:
-    if len(images) > 6:
-        raise ValueError("You can enroll up to 6 images at once.")
+    if len(images) > 3:
+        raise ValueError("You can enroll up to 3 images at once.")
     return images
 
 
@@ -151,15 +151,6 @@ def enroll_face(
                 EnrollmentClaim.user_id == current_user.id,
             ).delete(synchronize_session=False)
             db.commit()
-        log_event(
-            db,
-            "enroll",
-            success=False,
-            user_id=current_user.id,
-            email=current_user.email,
-            detail=f"enrollment batch failed after {len(results)} of {len(payload.images)} images",
-            ip_address=ip,
-        )
         raise
 
     log_event(

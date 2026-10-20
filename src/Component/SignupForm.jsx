@@ -205,7 +205,7 @@ function SignUpForm() {
         <div className={styles.blob1}/><div className={styles.blob2}/>
         <div className={styles.orbitWrap}><OrbitVisual/></div>
         <div className={styles.caption}>
-          <h3 className={styles.captionTitle}>Enroll up to 6 face images</h3>
+          <h3 className={styles.captionTitle}>Enroll up to 3 face images</h3>
           <p className={styles.captionText}>
             Multiple angles improve matching accuracy. Each photo is stored as a
             secure vector — no raw images in the database.
