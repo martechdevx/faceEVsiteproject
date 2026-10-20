@@ -5,6 +5,8 @@ import numpy as np
 from fastapi import HTTPException
 from insightface.app import FaceAnalysis
 
+MAX_IMAGE_DIMENSION = 640
+
 #  Load InsightFace model once (module-level singleton) 
 running_on_railway = os.environ.get("RUNNING_ON_RAILWAY", "").lower() == "true"
 target_device = -1 if running_on_railway else 0
@@ -19,7 +21,20 @@ _app = FaceAnalysis(
     allowed_modules=["detection", "recognition"],
     providers=providers,
 )
-_app.prepare(ctx_id=target_device, det_size=(1024, 1024), det_thresh=0.2)
+_app.prepare(ctx_id=target_device, det_size=(640, 640), det_thresh=0.2)
+
+
+def _resize_for_detection(image: np.ndarray) -> np.ndarray:
+    height, width = image.shape[:2]
+    scale = min(1, MAX_IMAGE_DIMENSION / max(height, width))
+    if scale == 1:
+        return image
+
+    resized_size = (
+        max(1, round(width * scale)),
+        max(1, round(height * scale)),
+    )
+    return cv2.resize(image, resized_size, interpolation=cv2.INTER_AREA)
 
 
 def _get_largest_face(image: np.ndarray):
@@ -65,6 +80,7 @@ def get_face_embedding(image_path: str) -> np.ndarray | None:
     if image is None:
         raise ValueError(f"Could not load image: {image_path}")
 
+    image = _resize_for_detection(image)
     largest_face = _get_largest_face(image)
     if largest_face is None:
         print(f"No detectable face in: {image_path}")
@@ -86,6 +102,7 @@ def get_embedding_from_bytes(image_bytes: bytes) -> np.ndarray:
     if image is None:
         raise HTTPException(status_code=400, detail="Could not decode the uploaded image.")
 
+    image = _resize_for_detection(image)
     largest_face = _get_largest_face(image)
     if largest_face is None:
         raise HTTPException(status_code=422, detail="No face detected in the uploaded image.")

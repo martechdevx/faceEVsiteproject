@@ -3,15 +3,58 @@ import CryptoJS from "crypto-js";
 const BASE_URL = import.meta.env.VITE_API_URL
   || `${window.location.protocol}//${window.location.hostname}:8000`;
 const MAX_IMAGE_SIZE_BYTES = 100 * 1024;
+const MAX_IMAGE_DIMENSION = 640;
 
 // ── Helpers ──────────────────────────────────────────────────────────────
 
-function toBase64(file) {
+async function resizeImage(file) {
+  const objectUrl = URL.createObjectURL(file);
+  try {
+    const image = await new Promise((resolve, reject) => {
+      const img = new Image();
+      img.onload = () => resolve(img);
+      img.onerror = () => reject(new Error("Could not load the selected image."));
+      img.src = objectUrl;
+    });
+    const scale = Math.min(
+      1,
+      MAX_IMAGE_DIMENSION / image.naturalWidth,
+      MAX_IMAGE_DIMENSION / image.naturalHeight,
+    );
+    if (scale === 1) return file;
+
+    const canvas = document.createElement("canvas");
+    canvas.width = Math.max(1, Math.round(image.naturalWidth * scale));
+    canvas.height = Math.max(1, Math.round(image.naturalHeight * scale));
+    const context = canvas.getContext("2d");
+    if (!context) throw new Error("Could not resize the selected image.");
+    context.drawImage(image, 0, 0, canvas.width, canvas.height);
+
+    return await new Promise((resolve, reject) => {
+      canvas.toBlob(
+        blob => blob ? resolve(blob) : reject(new Error("Could not resize the selected image.")),
+        file.type === "image/png" ? "image/png" : "image/jpeg",
+        0.9,
+      );
+    });
+  } finally {
+    URL.revokeObjectURL(objectUrl);
+  }
+}
+
+async function toBase64(file) {
+  const resizedFile = await resizeImage(file);
   return new Promise((resolve, reject) => {
     const reader = new FileReader();
-    reader.onload  = () => resolve(reader.result.split(",")[1]);
+    reader.onload = () => {
+      if (typeof reader.result !== "string") {
+        reject(new Error("Failed to read the selected image."));
+        return;
+      }
+      resolve(reader.result.split(",")[1]);
+    };
     reader.onerror = () => reject(new Error("Failed to read file"));
-    reader.readAsDataURL(file);
+    reader.readAsDataURL(resizedFile);
   });
 }
 
