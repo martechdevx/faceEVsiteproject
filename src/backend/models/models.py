@@ -48,7 +48,7 @@ class AuditLog(Base):
     __tablename__ = "audit_logs"
 
     id          = Column(Integer, primary_key=True)
-    event_type  = Column(String(30), nullable=False)   # signup | login | enroll | verify
+    event_type  = Column(String(30), nullable=False)   # signup | login | enroll | reenroll | verify
     success     = Column(Boolean, default=True, nullable=False)
     user_id     = Column(Integer, ForeignKey("users.id"), nullable=True)
     email       = Column(String(255), nullable=True)

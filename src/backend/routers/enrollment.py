@@ -11,6 +11,7 @@ from core.dependencies import get_current_user
 from core.config import settings
 from core.hmac_auth import verify_hmac
 from core.audit import log_event
+from core.enrollment_files import remove_enrollment_image_files
 from models.models import User, EnrolledFace, EnrollmentClaim
 from schemas.schemas import EnrollResponse, EnrollRequest
 from faiss_engine.faiss_manager import faiss_manager
@@ -71,95 +72,168 @@ def enroll_face(
     current_user: User = Depends(get_current_user),
 ):
     results = []
-    faiss_position = 0
     saved_files = []
-    persisted_files = set()
     ip = f"{request.client.host}:{request.client.port}" if request.client else None
     decoded_images = [decode_enrollment_image(image) for image in payload.images]
-
-    already_enrolled = db.query(EnrollmentClaim).filter(
-        EnrollmentClaim.user_id == current_user.id,
-    ).first() or db.query(EnrolledFace.id).filter(
+    existing_face = db.query(EnrolledFace.id).filter(
         EnrolledFace.enrolled_by == current_user.id,
     ).first()
-    if already_enrolled:
+    existing_claim = db.query(EnrollmentClaim.user_id).filter(
+        EnrollmentClaim.user_id == current_user.id,
+    ).first()
+    if existing_claim and not existing_face:
         raise HTTPException(
             status_code=status.HTTP_409_CONFLICT,
-            detail="You are already enrolled. Contact an administrator if you need to reenroll.",
+            detail="Your enrollment is already in progress. Please wait before trying again.",
         )
-
-    db.add(EnrollmentClaim(user_id=current_user.id))
-    try:
-        db.commit()
-    except IntegrityError:
-        db.rollback()
+    if existing_face and not payload.reenroll:
         raise HTTPException(
             status_code=status.HTTP_409_CONFLICT,
-            detail="You are already enrolled or your enrollment is in progress. Contact an administrator if you need to reenroll.",
+            detail="You are already enrolled. Choose re-enroll to replace your current enrollment.",
+        )
+    if payload.reenroll and not existing_face:
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail="There is no existing enrollment to replace. Submit a new enrollment instead.",
         )
 
-    try:
-        for b64_string, image_bytes in zip(payload.images, decoded_images):
-            embedding = get_embedding_from_bytes(image_bytes)
+    embeddings = [get_embedding_from_bytes(image_bytes) for image_bytes in decoded_images]
+    old_images = []
+    is_reenrollment = False
+
+    with faiss_manager.lock:
+        db.query(User).filter(User.id == current_user.id).with_for_update().first()
+        old_faces = (
+            db.query(EnrolledFace)
+            .filter(EnrolledFace.enrolled_by == current_user.id)
+            .order_by(EnrolledFace.faiss_index_id.desc())
+            .all()
+        )
+        claim = db.query(EnrollmentClaim).filter(
+            EnrollmentClaim.user_id == current_user.id,
+        ).first()
+
+        if claim and not old_faces:
+            raise HTTPException(
+                status_code=status.HTTP_409_CONFLICT,
+                detail="Your enrollment is already in progress. Please wait before trying again.",
+            )
+        if old_faces and not payload.reenroll:
+            raise HTTPException(
+                status_code=status.HTTP_409_CONFLICT,
+                detail="You are already enrolled. Choose re-enroll to replace your current enrollment.",
+            )
+        if payload.reenroll and not old_faces:
+            raise HTTPException(
+                status_code=status.HTTP_409_CONFLICT,
+                detail="There is no existing enrollment to replace. Submit a new enrollment instead.",
+            )
+
+        is_reenrollment = bool(old_faces)
+        for face in old_faces:
+            position = face.faiss_index_id
+            if (
+                position < 0
+                or position >= len(faiss_manager.metadata)
+                or faiss_manager.metadata[position] != face.id
+            ):
+                raise HTTPException(
+                    status_code=status.HTTP_409_CONFLICT,
+                    detail="The face index is out of sync. Rebuild the index before replacing this enrollment.",
+                )
+
+        snapshot = faiss_manager.snapshot()
+        old_images = [face.image_base64 for face in old_faces]
+        started_new_claim = False
+        try:
+            if not claim:
+                db.add(EnrollmentClaim(user_id=current_user.id))
+                if not old_faces:
+                    db.commit()
+                started_new_claim = True
 
             os.makedirs(settings.UPLOAD_DIR, exist_ok=True)
-            save_path = os.path.join(settings.UPLOAD_DIR, f"{uuid.uuid4().hex}.txt")
-            with open(save_path, "w") as image_file:
-                image_file.write(b64_string)
-            saved_files.append(save_path)
+            for b64_string in payload.images:
+                save_path = os.path.join(settings.UPLOAD_DIR, f"{uuid.uuid4().hex}.txt")
+                saved_files.append(save_path)
+                with open(save_path, "w") as image_file:
+                    image_file.write(b64_string)
 
-            with faiss_manager.lock:
+            for face in old_faces:
+                faiss_manager.remove_embedding(face.faiss_index_id)
+                db.delete(face)
+
+            for b64_string, embedding in zip(payload.images, embeddings):
                 faiss_position = faiss_manager.add_embedding(embedding, db_row_id=0)
-                try:
-                    enrolled = EnrolledFace(
-                        full_name=payload.full_name,
-                        gender=payload.gender,
-                        program=payload.program,
-                        matric_number=payload.matric_number,
-                        image_base64=b64_string,
-                        faiss_index_id=faiss_position,
-                        enrolled_by=current_user.id,
-                    )
-                    db.add(enrolled)
-                    db.commit()
-                    db.refresh(enrolled)
-                except Exception:
-                    db.rollback()
-                    faiss_manager.remove_embedding(faiss_position)
-                    raise
-
-                persisted_files.add(save_path)
+                enrolled = EnrolledFace(
+                    full_name=payload.full_name,
+                    gender=payload.gender,
+                    program=payload.program,
+                    matric_number=payload.matric_number,
+                    image_base64=b64_string,
+                    faiss_index_id=faiss_position,
+                    enrolled_by=current_user.id,
+                )
+                db.add(enrolled)
+                db.flush()
                 faiss_manager.metadata[faiss_position] = enrolled.id
                 faiss_manager._save()
-
-            results.append(
-                EnrollResponse(
-                    message=f"{len(results) + 1} face(s) enrolled successfully",
-                    enrolled_id=enrolled.id,
-                    matric_number=enrolled.matric_number,
-                    full_name=payload.full_name,
-                    faiss_index_id=faiss_position,
+                results.append(
+                    EnrollResponse(
+                        message=f"{len(results) + 1} face(s) enrolled successfully",
+                        enrolled_id=enrolled.id,
+                        matric_number=enrolled.matric_number,
+                        full_name=payload.full_name,
+                        faiss_index_id=faiss_position,
+                    )
                 )
-            )
-    except Exception:
-        db.rollback()
-        for path in saved_files:
-            if path not in persisted_files and os.path.exists(path):
-                os.remove(path)
-        if not persisted_files:
-            db.query(EnrollmentClaim).filter(
-                EnrollmentClaim.user_id == current_user.id,
-            ).delete(synchronize_session=False)
-            db.commit()
-        raise
 
+            db.flush()
+            face_positions = {
+                face_id: position
+                for position, face_id in enumerate(faiss_manager.metadata)
+            }
+            for face in db.query(EnrolledFace).all():
+                face.faiss_index_id = face_positions[face.id]
+
+            db.commit()
+        except IntegrityError as exc:
+            db.rollback()
+            faiss_manager.restore(snapshot)
+            for path in saved_files:
+                if os.path.exists(path):
+                    os.remove(path)
+            if started_new_claim:
+                db.query(EnrollmentClaim).filter(
+                    EnrollmentClaim.user_id == current_user.id,
+                ).delete(synchronize_session=False)
+                db.commit()
+            raise HTTPException(
+                status_code=status.HTTP_409_CONFLICT,
+                detail="Your enrollment could not be started because another request is in progress.",
+            ) from exc
+        except Exception:
+            db.rollback()
+            faiss_manager.restore(snapshot)
+            for path in saved_files:
+                if os.path.exists(path):
+                    os.remove(path)
+            if started_new_claim:
+                db.query(EnrollmentClaim).filter(
+                    EnrollmentClaim.user_id == current_user.id,
+                ).delete(synchronize_session=False)
+                db.commit()
+            raise
+
+    if is_reenrollment:
+        remove_enrollment_image_files(old_images)
     log_event(
         db,
-        "enroll",
+        "reenroll" if is_reenrollment else "enroll",
         success=True,
         user_id=current_user.id,
         email=current_user.email,
-        detail=f"enrollment batch completed; {len(results)} face images",
+        detail=f"{'re-enrollment' if is_reenrollment else 'enrollment'} completed; {len(results)} face images",
         ip_address=ip,
     )
 

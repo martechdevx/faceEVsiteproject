@@ -58,6 +58,7 @@ class EnrollRequest(BaseModel):
     program: str
     matric_number: str
     images: List[str] = Field(min_length=1, max_length=3)
+    reenroll: bool = False
     
 # ── Verification 
 

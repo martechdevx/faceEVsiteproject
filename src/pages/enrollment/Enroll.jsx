@@ -22,6 +22,7 @@ function Enroll() {
   const [checkingEnrollment, setCheckingEnrollment] = useState(true);
   const [alreadyEnrolled, setAlreadyEnrolled] = useState(false);
   const [enrollmentInProgress, setEnrollmentInProgress] = useState(false);
+  const [isReenrolling, setIsReenrolling] = useState(false);
   const [enrolledFaceCount, setEnrolledFaceCount] = useState(0);
   const [enrollmentCheckError, setEnrollmentCheckError] = useState("");
   const [error, setError] = useState("");
@@ -73,15 +74,30 @@ function Enroll() {
   }
 
   if (alreadyEnrolled) {
+    const startReenrollment = () => {
+      const confirmed = window.confirm(
+        "Re-enroll with new photos? Your current enrollment will remain active unless the new enrollment succeeds.",
+      );
+      if (!confirmed) return;
+      setIsReenrolling(true);
+      setAlreadyEnrolled(false);
+      setFullName("");
+      setGender("");
+      setProgram("");
+      setMatricNumber("");
+      setError("");
+      setSuccess(null);
+    };
+
     return (
       <div className={styles.enrollmentStatusPage}>
         <div className={styles.enrollmentStatusCard}>
           <span className={styles.enrollmentStatusSuccess}><FiCheckCircle size={24}/></span>
-          <div className={styles.enrollmentStatusEyebrow}>{enrollmentInProgress ? "ENROLLMENT IN PROGRESS" : "ENROLLMENT COMPLETE"}</div>
-          <h1>{enrollmentInProgress ? "Your enrollment is in progress" : "You’re already enrolled"}</h1>
+          <div className={styles.enrollmentStatusEyebrow}>{enrollmentInProgress ? "ENROLLMENT IN PROGRESS" : success && isReenrolling ? "RE-ENROLLMENT COMPLETE" : "ENROLLMENT COMPLETE"}</div>
+          <h1>{enrollmentInProgress ? "Your enrollment is in progress" : success ? isReenrolling ? "You’ve re-enrolled successfully" : "You’re enrolled successfully" : "You’re already enrolled"}</h1>
           {enrollmentInProgress ? <p>Your images are still being processed. Please wait before trying again.</p> : <p>{"Your account has"} {enrolledFaceCount} face image{enrolledFaceCount === 1 ? "" : "s"} on record.</p>}
-          {!enrollmentInProgress && <p>To update your enrollment or add new photos, contact an administrator and ask them to remove your current enrollment.</p>}
           {success && <div className="alert alert-success"><FiCheckCircle size={14}/><span>{success}</span></div>}
+          {!enrollmentInProgress && <button type="button" className="btn btn-primary" onClick={startReenrollment}>Re-enroll</button>}
           <Link to="/dashboard" className="btn btn-primary">Back to dashboard</Link>
         </div>
       </div>
@@ -175,9 +191,9 @@ function Enroll() {
     if (!selectedFiles.length) { setError("Please select at least one face image."); return; }
     setError(""); setSuccess(null); setLoading(true);
     try {
-      const result = await apiEnroll(fullName, gender, program, matricNumber, selectedFiles);
+      const result = await apiEnroll(fullName, gender, program, matricNumber, selectedFiles, isReenrolling);
       const count = Array.isArray(result) ? result.length : 1;
-      setSuccess(`Successfully enrolled ${count} image${count > 1 ? "s" : ""} for ${fullName}.`);
+      setSuccess(`Successfully ${isReenrolling ? "re-enrolled" : "enrolled"} ${count} image${count > 1 ? "s" : ""} for ${fullName}.`);
       setEnrolledFaceCount(count);
       setAlreadyEnrolled(true);
       setFullName(""); setGender(""); setProgram(""); setMatricNumber("");

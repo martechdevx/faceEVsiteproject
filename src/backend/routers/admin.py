@@ -1,6 +1,3 @@
-import hashlib
-import os
-
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy import desc, func, or_
 from sqlalchemy.orm import Session
@@ -9,6 +6,7 @@ from core.audit import log_event
 from core.config import settings
 from core.database import get_db
 from core.dependencies import get_current_user
+from core.enrollment_files import remove_enrollment_image_files
 from models.models import AuditLog, EnrolledFace, EnrollmentClaim, RefreshToken, User
 from schemas.admin import (
     AdminAccountResponse,
@@ -39,22 +37,6 @@ def _activity_payload(entry: AuditLog, actor_name: str | None) -> dict:
         "detail": entry.detail,
         "created_at": entry.created_at,
     }
-
-
-def _remove_enrollment_image_files(images: list[str]) -> None:
-    if not images or not os.path.isdir(settings.UPLOAD_DIR):
-        return
-    image_hashes = {hashlib.sha256(image.encode("ascii")).digest() for image in images}
-    for entry in os.scandir(settings.UPLOAD_DIR):
-        if not entry.is_file() or not entry.name.endswith(".txt"):
-            continue
-        try:
-            with open(entry.path, "rb") as image_file:
-                file_hash = hashlib.sha256(image_file.read()).digest()
-            if file_hash in image_hashes:
-                os.remove(entry.path)
-        except OSError:
-            continue
 
 
 def require_admin(current_user: User = Depends(get_current_user)) -> User:
@@ -246,7 +228,7 @@ def delete_enrollment(
             faiss_manager.restore(snapshot)
             raise
 
-    _remove_enrollment_image_files(saved_images)
+    remove_enrollment_image_files(saved_images)
     owner = db.query(User).filter(User.id == user_id).first()
     log_event(
         db,

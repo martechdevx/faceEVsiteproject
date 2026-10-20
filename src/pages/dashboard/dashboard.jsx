@@ -67,7 +67,13 @@ function ActivityRow({ icon, text, time, color }) {
 }
 
 function formatActivity(activity) {
-  const event = activity.event_type === "enroll" ? "Face enrollment" : activity.event_type === "verify" ? "Face verification" : activity.event_type;
+  const event = activity.event_type === "enroll"
+    ? "Face enrollment"
+    : activity.event_type === "reenroll"
+      ? "Face re-enrollment"
+      : activity.event_type === "verify"
+        ? "Face verification"
+        : activity.event_type;
   const detail = activity.detail?.replace(/^enrolled_id=\d+\s*/, "") || (activity.success ? "Completed successfully" : "Failed");
   const elapsed = Math.max(0, Date.now() - new Date(activity.created_at).getTime());
   const minutes = Math.floor(elapsed / 60000);
@@ -433,7 +439,7 @@ function AdminDashboard({ user, logout, updateProfile }) {
       return (
         <Fragment key={entry.id}>
           <tr>
-            <td><button type="button" className={styles.auditDisclosure} aria-expanded={isExpanded} aria-controls={`audit-details-${entry.id}`} onClick={() => setExpandedActivity(isExpanded ? null : entry.id)}><span className={styles.eventType}>{entry.event_type.replaceAll("_", " ")}</span><FiChevronDown className={isExpanded ? styles.auditChevronOpen : ""} size={14}/></button></td>
+            <td><button type="button" className={styles.auditDisclosure} aria-expanded={isExpanded} aria-controls={`audit-details-${entry.id}`} onClick={() => setExpandedActivity(isExpanded ? null : entry.id)}><span className={styles.eventType}>{entry.event_type === "reenroll" ? "re-enrolled" : entry.event_type.replaceAll("_", " ")}</span><FiChevronDown className={isExpanded ? styles.auditChevronOpen : ""} size={14}/></button></td>
             <td className={styles.accountEmail}>{entry.actor_name || (entry.actor_id ? `Account #${entry.actor_id}` : "Unregistered account")}</td>
             <td><span className={`${styles.eventStatus} ${entry.success ? styles.eventSuccess : styles.eventFailure}`}>{entry.success ? "Success" : "Failed"}</span></td>
             <td className={styles.auditDetail}>{formattedDate(entry.created_at)}</td>
@@ -791,7 +797,7 @@ export default function Dashboard() {
             <div className={styles.cardSub} style={{ marginBottom:16 }}>System events and operations</div>
             {stats.recent_activity?.length ? stats.recent_activity.map((activity, index) => {
               const item = formatActivity(activity);
-              const isEnrollment = activity.event_type === "enroll";
+              const isEnrollment = activity.event_type === "enroll" || activity.event_type === "reenroll";
               const color = activity.success ? (isEnrollment ? "#2563eb" : "#06b6d4") : "#f59e0b";
               return (
                 <ActivityRow

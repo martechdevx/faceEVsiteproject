@@ -174,7 +174,7 @@ async function authFetch(url, options = {}) {
 
 // ── Enrollment ────────────────────────────────────────────────────────────
 
-export async function apiEnroll(fullName, gender, program, matricNumber, imageFiles) {
+export async function apiEnroll(fullName, gender, program, matricNumber, imageFiles, reenroll = false) {
   const files = Array.isArray(imageFiles) ? imageFiles : [imageFiles];
   if (!files.length) throw new Error("Please select at least one face image.");
   if (files.some(file => file.size > MAX_IMAGE_SIZE_BYTES)) {
@@ -188,6 +188,7 @@ export async function apiEnroll(fullName, gender, program, matricNumber, imageFi
     program,
     matric_number: matricNumber,
     images: base64Images,
+    reenroll,
   });
 
   const res = await authFetch(`${BASE_URL}/enroll/`, {

@@ -12,7 +12,7 @@ def prune_audit_logs(db: Session) -> None:
     db.query(AuditLog).filter(
         or_(
             AuditLog.event_type == "login",
-            (AuditLog.event_type == "enroll") & AuditLog.success.is_(False),
+            (AuditLog.event_type.in_(("enroll", "reenroll"))) & AuditLog.success.is_(False),
             AuditLog.created_at < cutoff,
         )
     ).delete(
