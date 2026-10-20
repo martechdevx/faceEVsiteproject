@@ -3,6 +3,7 @@ import uuid
 import base64
 import binascii
 from typing import List
+from sqlalchemy import update
 from sqlalchemy.exc import IntegrityError
 from fastapi import APIRouter, Depends, HTTPException, UploadFile, File, Form, status, Request
 from sqlalchemy.orm import Session
@@ -142,7 +143,8 @@ def enroll_face(
                     detail="The face index is out of sync. Rebuild the index before replacing this enrollment.",
                 )
 
-        snapshot = faiss_manager.snapshot()
+        starting_faiss_count = len(faiss_manager.metadata)
+        snapshot = faiss_manager.snapshot() if is_reenrollment else None
         old_images = [face.image_base64 for face in old_faces]
         started_new_claim = False
         try:
@@ -189,17 +191,29 @@ def enroll_face(
                 )
 
             db.flush()
-            face_positions = {
-                face_id: position
-                for position, face_id in enumerate(faiss_manager.metadata)
-            }
-            for face in db.query(EnrolledFace).all():
-                face.faiss_index_id = face_positions[face.id]
+            if is_reenrollment:
+                face_positions = {
+                    face_id: position
+                    for position, face_id in enumerate(faiss_manager.metadata)
+                }
+                position_updates = [
+                    {"id": face_id, "faiss_index_id": face_positions[face_id]}
+                    for face_id, _ in db.query(
+                        EnrolledFace.id,
+                        EnrolledFace.faiss_index_id,
+                    ).all()
+                ]
+                if position_updates:
+                    db.execute(update(EnrolledFace), position_updates)
 
             db.commit()
         except IntegrityError as exc:
             db.rollback()
-            faiss_manager.restore(snapshot)
+            if snapshot is not None:
+                faiss_manager.restore(snapshot)
+            else:
+                while len(faiss_manager.metadata) > starting_faiss_count:
+                    faiss_manager.remove_embedding(len(faiss_manager.metadata) - 1)
             for path in saved_files:
                 if os.path.exists(path):
                     os.remove(path)
@@ -214,7 +228,11 @@ def enroll_face(
             ) from exc
         except Exception:
             db.rollback()
-            faiss_manager.restore(snapshot)
+            if snapshot is not None:
+                faiss_manager.restore(snapshot)
+            else:
+                while len(faiss_manager.metadata) > starting_faiss_count:
+                    faiss_manager.remove_embedding(len(faiss_manager.metadata) - 1)
             for path in saved_files:
                 if os.path.exists(path):
                     os.remove(path)
