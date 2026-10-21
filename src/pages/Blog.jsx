@@ -383,11 +383,11 @@ function Blog() {
           </h2>
           <p style={{ fontSize: 15, color: "var(--white-60)", marginBottom: 28, maxWidth: 440, margin: "0 auto 28px" }}>
             We publish new articles on face recognition, security, and campus technology
-            regularly. Check back for the latest.
+            regularly. Check back for the latest post.
           </p>
           {/* <Link to="/signup" className="btn btn-primary" style={{ padding: "12px 28px" }}>
             Get Started with FaceIO
-          </Link> */}
+          </Link> */}  
         </div>
       </div>
     </div>
