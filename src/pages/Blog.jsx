@@ -385,9 +385,9 @@ function Blog() {
             We publish new articles on face recognition, security, and campus technology
             regularly. Check back for the latest.
           </p>
-          <Link to="/signup" className="btn btn-primary" style={{ padding: "12px 28px" }}>
+          {/* <Link to="/signup" className="btn btn-primary" style={{ padding: "12px 28px" }}>
             Get Started with FaceIO
-          </Link>
+          </Link> */}
         </div>
       </div>
     </div>
