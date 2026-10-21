@@ -439,7 +439,7 @@ function Enroll() {
               </div>
 
               <p style={{ fontSize: 12, color: "var(--white-30)", marginTop: 12 }}>
-                <FiInfo size={13} /> Tip: Use photos from different angles and lighting for best accuracy. JPG or PNG only.
+                <FiInfo size={13} /> Tip: Use photos from different angles and lighting for best accuracy, JPG or PNG only.
               </p>
             </div>
 
