@@ -664,13 +664,14 @@ function AdminDashboard({ user, logout, updateProfile }) {
 }
 
 export default function Dashboard() {
-  const { user, logout, updateProfile, isLoggedIn, checking } = useAuth();
+  const { user, logout, updateProfile, isLoggedIn, checking, loginMode } = useAuth();
+  const showAdminDashboard = loginMode === "admin" && user?.isAdmin;
   const [stats, setStats]   = useState({ total_enrolled:0, total_verified:0, recent_activity:[] });
   const [loading, setLoading] = useState(true);
   const [showAccountSettings, setShowAccountSettings] = useState(false);
 
   useEffect(() => {
-    if (!isLoggedIn || user?.isAdmin) return;
+    if (!isLoggedIn || showAdminDashboard) return;
 
     let cancelled = false;
     const loadStats = () => {
@@ -689,7 +690,7 @@ export default function Dashboard() {
       window.clearInterval(interval);
       window.removeEventListener("focus", loadStats);
     };
-  }, [isLoggedIn, user?.isAdmin]);
+  }, [isLoggedIn, showAdminDashboard]);
 
   if (checking) return null;
 
@@ -706,7 +707,7 @@ export default function Dashboard() {
     );
   }
 
-  if (user?.isAdmin) return <AdminDashboard user={user} logout={logout} updateProfile={updateProfile} />;
+  if (showAdminDashboard) return <AdminDashboard user={user} logout={logout} updateProfile={updateProfile} />;
   if (showAccountSettings) {
     return <UserAccountSettings user={user} updateProfile={updateProfile} onBack={() => setShowAccountSettings(false)} />;
   }

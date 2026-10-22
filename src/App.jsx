@@ -14,8 +14,8 @@ import Dashboard from "./pages/dashboard/dashboard.jsx";
 
 function AppContent() {
   const location = useLocation();
-  const { isAdmin } = useAuth();
-  const adminDashboard = isAdmin && location.pathname === "/dashboard";
+  const { isAdmin, loginMode } = useAuth();
+  const adminDashboard = isAdmin && loginMode === "admin" && location.pathname === "/dashboard";
 
   useLayoutEffect(() => {
     const root = document.documentElement;

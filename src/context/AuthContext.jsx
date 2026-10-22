@@ -5,6 +5,7 @@ import { apiMe, apiRefresh, apiLogout } from "../services/api.js";
 const AuthContext = createContext(null);
 const IDLE_TIMEOUT_MS = 30 * 60 * 1000;
 const LAST_ACTIVITY_KEY = "last_activity_at";
+const LOGIN_MODE_KEY = "login_mode";
 
 export function AuthProvider({ children }) {
   // We never store the HttpOnly token in JS — the browser holds it in the
@@ -19,6 +20,11 @@ export function AuthProvider({ children }) {
       ? { fullName, userId, isAdmin }
       : null;
   });
+  const [loginMode, setLoginMode] = useState(() => {
+    const savedMode = localStorage.getItem(LOGIN_MODE_KEY);
+    if (savedMode === "admin" || savedMode === "user") return savedMode;
+    return "user";
+  });
   const initialUser = useRef(user);
   const logoutStarted = useRef(false);
 
@@ -32,6 +38,8 @@ export function AuthProvider({ children }) {
     localStorage.removeItem("user_id");
     localStorage.removeItem("is_admin");
     localStorage.removeItem(LAST_ACTIVITY_KEY);
+    localStorage.removeItem(LOGIN_MODE_KEY);
+    setLoginMode("user");
     setUser(null);
   }, []);
 
@@ -116,6 +124,9 @@ export function AuthProvider({ children }) {
     localStorage.setItem("user_id",   String(data.user_id));
     localStorage.setItem("is_admin", String(!!data.is_admin));
     localStorage.setItem(LAST_ACTIVITY_KEY, String(Date.now()));
+    const mode = adminMode ? "admin" : "user";
+    setLoginMode(mode);
+    localStorage.setItem(LOGIN_MODE_KEY, mode);
     navigate(adminMode ? "/dashboard" : "/");
   }
 
@@ -170,6 +181,9 @@ export function AuthProvider({ children }) {
         navigate("/");
         return;
       }
+      if (event.key === LOGIN_MODE_KEY && event.newValue) {
+        setLoginMode(event.newValue === "admin" ? "admin" : "user");
+      }
       if (event.key !== LAST_ACTIVITY_KEY || !event.newValue) return;
 
       const timestamp = Number(event.newValue);
@@ -209,7 +223,7 @@ export function AuthProvider({ children }) {
   }
 
   return (
-    <AuthContext.Provider value={{ user, login, logout, updateProfile, isAdmin, isLoggedIn: !!user, checking }}>
+    <AuthContext.Provider value={{ user, login, logout, updateProfile, isAdmin, loginMode, isLoggedIn: !!user, checking }}>
       {children}
     </AuthContext.Provider>
   );
