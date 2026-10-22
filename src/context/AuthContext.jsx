@@ -1,8 +1,10 @@
-import { createContext, useContext, useState, useEffect, useRef } from "react";
+import { createContext, useContext, useState, useEffect, useRef, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { apiMe, apiRefresh, apiLogout } from "../services/api.js";
 
 const AuthContext = createContext(null);
+const IDLE_TIMEOUT_MS = 30 * 60 * 1000;
+const LAST_ACTIVITY_KEY = "last_activity_at";
 
 export function AuthProvider({ children }) {
   // We never store the HttpOnly token in JS — the browser holds it in the
@@ -18,10 +20,20 @@ export function AuthProvider({ children }) {
       : null;
   });
   const initialUser = useRef(user);
+  const logoutStarted = useRef(false);
 
   // true while we're verifying the session cookie on first mount
   const [checking, setChecking] = useState(() => !!user);
   const navigate = useNavigate();
+
+  const clearLocal = useCallback(() => {
+    logoutStarted.current = true;
+    localStorage.removeItem("full_name");
+    localStorage.removeItem("user_id");
+    localStorage.removeItem("is_admin");
+    localStorage.removeItem(LAST_ACTIVITY_KEY);
+    setUser(null);
+  }, []);
 
   // On every page load, ask the backend if the cookie is still valid.
   // If the access token is expired, apiMe returns null and we try refresh.
@@ -33,6 +45,20 @@ export function AuthProvider({ children }) {
 
     async function verifySession() {
       try {
+        const lastActivity = Number(localStorage.getItem(LAST_ACTIVITY_KEY));
+        if (lastActivity && Date.now() - lastActivity >= IDLE_TIMEOUT_MS) {
+          logoutStarted.current = true;
+          await apiLogout();
+          if (!cancelled) {
+            clearLocal();
+            navigate("/");
+          }
+          return;
+        }
+        if (!lastActivity) {
+          localStorage.setItem(LAST_ACTIVITY_KEY, String(Date.now()));
+        }
+
         // 1. Try /auth/me with the current access token cookie
         const data = await apiMe();
 
@@ -73,16 +99,9 @@ export function AuthProvider({ children }) {
 
     verifySession();
     return () => { cancelled = true; };
-  }, []);
+  }, [clearLocal, navigate]);
 
-  function clearLocal() {
-    localStorage.removeItem("full_name");
-    localStorage.removeItem("user_id");
-    localStorage.removeItem("is_admin");
-    setUser(null);
-  }
-
-  function login(data) {
+  function login(data, adminMode) {
     // data = { message, user_id, full_name }  — NO access_token in the body
     // The access + refresh cookies were already set by the server on this response.
     const fresh = {
@@ -91,11 +110,13 @@ export function AuthProvider({ children }) {
       email: data.email,
       isAdmin: !!data.is_admin,
     };
+    logoutStarted.current = false;
     setUser(fresh);
     localStorage.setItem("full_name", data.full_name);
     localStorage.setItem("user_id",   String(data.user_id));
     localStorage.setItem("is_admin", String(!!data.is_admin));
-    navigate(data.is_admin ? "/dashboard" : "/");
+    localStorage.setItem(LAST_ACTIVITY_KEY, String(Date.now()));
+    navigate(adminMode ? "/dashboard" : "/");
   }
 
   function updateProfile(data) {
@@ -111,7 +132,77 @@ export function AuthProvider({ children }) {
 
   const isAdmin = !!user?.isAdmin || localStorage.getItem("is_admin") === "true";
 
+  useEffect(() => {
+    if (!user) return undefined;
+
+    let lastActivity = Number(localStorage.getItem(LAST_ACTIVITY_KEY)) || Date.now();
+    let lastPersistedActivity = lastActivity;
+    let expiryTimer;
+
+    const expireIfIdle = () => {
+      if (logoutStarted.current) return;
+      const remaining = IDLE_TIMEOUT_MS - (Date.now() - lastActivity);
+      if (remaining > 0) {
+        expiryTimer = setTimeout(expireIfIdle, remaining);
+        return;
+      }
+
+      logoutStarted.current = true;
+      void apiLogout();
+      clearLocal();
+      navigate("/");
+    };
+
+    const recordActivity = () => {
+      const now = Date.now();
+      if (now - lastActivity < 1000) return;
+      lastActivity = now;
+      if (now - lastPersistedActivity >= 5000) {
+        localStorage.setItem(LAST_ACTIVITY_KEY, String(now));
+        lastPersistedActivity = now;
+      }
+    };
+
+    const syncActivity = (event) => {
+      if (event.key === "full_name" && event.newValue === null) {
+        clearTimeout(expiryTimer);
+        clearLocal();
+        navigate("/");
+        return;
+      }
+      if (event.key !== LAST_ACTIVITY_KEY || !event.newValue) return;
+
+      const timestamp = Number(event.newValue);
+      if (Number.isFinite(timestamp) && timestamp > lastActivity) {
+        lastActivity = timestamp;
+        lastPersistedActivity = timestamp;
+        clearTimeout(expiryTimer);
+        expireIfIdle();
+      }
+    };
+
+    const checkOnVisibility = () => {
+      if (document.visibilityState !== "visible") return;
+      clearTimeout(expiryTimer);
+      expireIfIdle();
+    };
+
+    const activityEvents = ["pointerdown", "pointermove", "keydown", "touchstart", "wheel", "scroll"];
+    activityEvents.forEach(eventName => window.addEventListener(eventName, recordActivity, { passive: true }));
+    window.addEventListener("storage", syncActivity);
+    document.addEventListener("visibilitychange", checkOnVisibility);
+    expiryTimer = setTimeout(expireIfIdle, Math.max(0, IDLE_TIMEOUT_MS - (Date.now() - lastActivity)));
+
+    return () => {
+      clearTimeout(expiryTimer);
+      activityEvents.forEach(eventName => window.removeEventListener(eventName, recordActivity));
+      window.removeEventListener("storage", syncActivity);
+      document.removeEventListener("visibilitychange", checkOnVisibility);
+    };
+  }, [user, clearLocal, navigate]);
+
   async function logout() {
+    logoutStarted.current = true;
     try { await apiLogout(); } catch { /* ignore network errors on logout */ }
     clearLocal();
     navigate("/");

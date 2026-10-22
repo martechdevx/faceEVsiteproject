@@ -93,7 +93,7 @@ function LoginForm() {
     setError(""); setLoading(true);
     try {
       const data = await apiLogin(email, password, adminMode);
-      login(data);
+      login(data, adminMode);
     } catch (err) {
       setError(err.message || "Invalid email or passowrd. Please try again.");
     } finally {
