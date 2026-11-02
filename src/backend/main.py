@@ -125,6 +125,7 @@ app.add_middleware(
         "http://localhost:3000",    #local alt
         "http://127.0.0.1:3000",    #local alt
         "https://faceio.pages.dev", #production
+        "https://cogniface.pages.dev", #production
     ],
     allow_credentials=True,
     allow_methods=["*"],
